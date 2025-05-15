@@ -44,7 +44,6 @@ sudo mv buzzlink /usr/local/bin
 Ensure these are installed on your system:
 
 * [`curl`](https://curl.se/)
-* [`qrencode`](https://fukuchi.org/works/qrencode/)
 * One clipboard tool: `xclip`, `wl-copy`, or `pbcopy`
 * One encryption tool: `7z` or `zip`
 
@@ -52,10 +51,10 @@ Install with:
 
 ```bash
 # Ubuntu / Debian
-sudo apt install curl qrencode zip xclip p7zip-full
+sudo apt install curl zip xclip p7zip-full
 
 # macOS (via Homebrew)
-brew install curl qrencode zip p7zip pbcopy
+brew install curl zip p7zip pbcopy
 ```
 
 ---
