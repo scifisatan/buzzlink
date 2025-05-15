@@ -54,12 +54,15 @@ Options:
   -h        Show this help message
   -n NOTE   Add a note to the upload (optional)
   -p PASS   Password protect the upload before upload (optional)
+  --noqr    Disable QR code display
+  --noqr    Disable QR code display
 
 Examples:
   $(basename "$0") image.jpg                    # Upload a file
   $(basename "$0") documents/                   # Upload a directory as zip
   $(basename "$0") -n "Project files" src/     # Upload directory with note
   $(basename "$0") -p "secret123" docs/        # Upload encrypted directory
+  $(basename "$0") image.jpg --noqr            # Upload without QR code
   
 Requirements:
   • curl        - For file upload
@@ -114,7 +117,26 @@ parse_args() {
   FILE=""
   NOTE=""
   PASSWORD=""
+  SHOW_QR=true
 
+  local args=()
+  
+  # Separate standard arguments and --noqr flag
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --noqr)
+        SHOW_QR=false
+        ;;
+      *)
+        args+=("$1")
+        ;;
+    esac
+    shift
+  done
+  
+  # Set the positional arguments to our filtered args
+  set -- "${args[@]}"
+  
   # Check if any arguments were provided
   [[ $# -eq 0 ]] && { print_status "$ICON_ERROR" "$COLOR_RED" "No file specified."; show_help; }
   
@@ -324,9 +346,11 @@ fi
 # Construct download link
 LINK="https://buzzheavier.com/$ID"
 
-# Output success and generate QR code
+# Output success
 print_status "$ICON_SUCCESS" "$COLOR_GREEN" "Uploaded successfully!"
-generate_qr "$LINK"
+
+# Generate QR code if enabled
+[[ "$SHOW_QR" = true ]] && generate_qr "$LINK"
 
 # Show link and copy to clipboard
 echo
