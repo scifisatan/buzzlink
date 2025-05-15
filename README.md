@@ -73,6 +73,7 @@ buzzlink [OPTIONS] <file | directory>
 | `-h`      | Show help message                     |
 | `-n NOTE` | Add a base64-encoded note to the file |
 | `-p PASS` | Password-protect the file (7z/zip)    |
+| `--noqr`  | Disable QR code display.              |
 
 ### Examples
 
@@ -133,7 +134,7 @@ Encrypted files **cannot** be decrypted without the correct password. Store it s
 
 ### 📂 Can I share multiple files?
 
-Currently, only one file at a time. Consider zipping them together before uploading.
+Currently, only one file at a time. Consider putting them in a directory and providing buzzlink with the directory.
 
 ### ⚙️ Can I change the host domain?
 

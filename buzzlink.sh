@@ -55,7 +55,6 @@ Options:
   -n NOTE   Add a note to the upload (optional)
   -p PASS   Password protect the upload before upload (optional)
   --noqr    Disable QR code display
-  --noqr    Disable QR code display
 
 Examples:
   $(basename "$0") image.jpg                    # Upload a file
