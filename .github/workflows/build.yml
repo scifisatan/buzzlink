@@ -23,7 +23,11 @@ jobs:
 
       - name: Compile buzzlink.sh using shc
         run: |
-          shc -f buzzlink.sh -o buzzlink
+          cp buzzlink.sh buzzlink_temp.sh
+          chmod +x buzzlink_temp.sh
+          # Hardcode interpreter if needed
+          sed -i '1s|^.*$|#!/bin/bash|' buzzlink_temp.sh
+          shc -f buzzlink_temp.sh -o buzzlink
 
       - name: Create GitHub Release and Upload Binary
         uses: softprops/action-gh-release@v2
