@@ -267,29 +267,27 @@ generate_qr() {
   print_status "$ICON_MOBILE" "$COLOR_MAGENTA" "QR Code for mobile access:"
   echo
   
-  # Use curl to generate QR code from online API
-  # Using QR Server API (can be substituted with other online QR services)
-  local qr_api_url="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${link}"
+  # URL encode the link for safe transmission
+  # Using standard URL encoding with bash/sed
+  local encoded_link=$(echo "$link" | sed -e 's/%/%25/g' -e 's/ /%20/g' -e 's/!/%21/g' -e 's/"/%22/g' \
+    -e 's/#/%23/g' -e 's/\$/%24/g' -e 's/\&/%26/g' -e "s/'/%27/g" -e 's/(/%28/g' \
+    -e 's/)/%29/g' -e 's/\*/%2A/g' -e 's/+/%2B/g' -e 's/,/%2C/g' -e 's/-/%2D/g' \
+    -e 's/\./%2E/g' -e 's/\//%2F/g' -e 's/:/%3A/g' -e 's/;/%3B/g' -e 's//%3C/g' \
+    -e 's/=/%3D/g' -e 's/>/%3E/g' -e 's/?/%3F/g' -e 's/@/%40/g' -e 's/\[/%5B/g' \
+    -e 's/\\/%5C/g' -e 's/\]/%5D/g' -e 's/\^/%5E/g' -e 's/_/%5F/g' -e 's/`/%60/g' \
+    -e 's/{/%7B/g' -e 's/|/%7C/g' -e 's/}/%7D/g' -e 's/~/%7E/g')
   
-  # Download and display the QR code as ASCII art
-  if ! curl -s "$qr_api_url" -o /tmp/qrcode.png; then
+  # Use QRCode.show API which directly returns ASCII art QR codes
+  local qr_api_url="https://qrcode.show/$encoded_link?format=text"
+  
+  # Display the QR code in ASCII format
+  if ! curl -s "$qr_api_url"; then
     print_status "$ICON_ERROR" "$COLOR_RED" "Failed to generate QR code from online service"
     return 1
   fi
   
-  # Try to display the QR code using ASCII representation
-  if command -v jp2a >/dev/null 2>&1; then
-    jp2a --width=40 /tmp/qrcode.png
-  else
-    print_status "$ICON_INFO" "$COLOR_BLUE" "QR code generated at: $qr_api_url"
-    print_status "$ICON_INFO" "$COLOR_BLUE" "(Install jp2a to display QR codes in terminal)"
-  fi
-  
-  # Clean up temporary file
-  rm -f /tmp/qrcode.png
   echo
 }
-
 # Copy link to clipboard
 copy_to_clipboard() {
   local link="$1"
