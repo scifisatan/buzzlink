@@ -1,3 +1,7 @@
+<div align="center">
+    <img src="./buzzlink.gif" alt="buzzlink demo" />
+</div>
+
 <h1 align="center">📦 BuzzLink</h1>
 <p align="center"><strong>Simple, Secure, and Shareable File Uploads via CLI</strong></p>
 
