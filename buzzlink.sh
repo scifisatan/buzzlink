@@ -40,26 +40,26 @@ readonly ICON_PACKAGE="📦"
 # Show help message
 show_help() {
   cat << EOF
-📦 Buzzlink - Simple file sharing utility
+    ██████╗ ██╗   ██╗███████╗███████╗██╗     ██╗███╗   ██╗██╗  ██╗
+    ██╔══██╗██║   ██║╚══███╔╝╚══███╔╝██║     ██║████╗  ██║██║ ██╔╝
+    ██████╔╝██║   ██║  ███╔╝   ███╔╝ ██║     ██║██╔██╗ ██║█████╔╝ 
+    ██╔══██╗██║   ██║ ███╔╝   ███╔╝  ██║     ██║██║╚██╗██║██╔═██╗ 
+    ██████╔╝╚██████╔╝███████╗███████╗███████╗██║██║ ╚████║██║  ██╗
+    ╚═════╝  ╚═════╝ ╚══════╝╚══════╝╚══════╝╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝
 
 Usage: 
-  $(basename "$0") [OPTIONS] <file>
+  $(basename "$0") [OPTIONS] <file|directory>
 
 Options:
   -h        Show this help message
   -n NOTE   Add a note to the upload (optional)
-  -p PASS   Password protect the file before upload (optional)
+  -p PASS   Password protect the upload before upload (optional)
 
 Examples:
-  $(basename "$0") image.jpg                    # Simple upload
-  $(basename "$0") -n "Screenshot" image.jpg    # Upload with note
-  $(basename "$0") -p "secret123" doc.pdf       # Password protected upload
-  
-Features:
-  • Automatic clipboard copy of download link
-  • QR code generation for easy mobile access
-  • Password protection using 7z/zip
-  • Note attachment support
+  $(basename "$0") image.jpg                    # Upload a file
+  $(basename "$0") documents/                   # Upload a directory as zip
+  $(basename "$0") -n "Project files" src/     # Upload directory with note
+  $(basename "$0") -p "secret123" docs/        # Upload encrypted directory
   
 Requirements:
   • curl        - For file upload
@@ -147,20 +147,47 @@ parse_args() {
   # Check if a file was specified
   [[ $# -eq 0 ]] && { print_status "$ICON_ERROR" "$COLOR_RED" "No file specified."; show_help; }
   
-  # Set and verify file path
+  # Set and verify path exists
   FILE="$1"
-  [[ ! -f "$FILE" ]] && { print_status "$ICON_ERROR" "$COLOR_RED" "File '$FILE' not found."; exit 1; }
+  if [[ ! -e "$FILE" ]]; then
+    print_status "$ICON_ERROR" "$COLOR_RED" "Path '$FILE' not found."
+    exit 1
+  fi
 }
 
 # Process file for upload (encryption if needed)
 process_file() {
-  local input_file="$1"
+  local input_path="$1"
   local password="$2"
   local temp_dir
   local archive_name
   
   # Initialize variables
-  UPLOAD_FILE="$input_file"
+  UPLOAD_FILE="$input_path"
+  
+  # If it's a directory, create zip archive
+  if [[ -d "$input_path" ]]; then
+    # Create temporary directory
+    TEMP_DIR=$(mktemp -d)
+    archive_name="${TEMP_DIR}/$(basename "$input_path").zip"
+    
+    print_status "$ICON_PACKAGE" "$COLOR_BLUE" "Creating archive from directory..."
+    
+    # Try to create zip archive
+    if command -v zip >/dev/null 2>&1; then
+      (cd "$(dirname "$input_path")" && zip -r "$archive_name" "$(basename "$input_path")") >/dev/null 2>&1 || {
+        print_status "$ICON_ERROR" "$COLOR_RED" "Failed to create archive from directory"
+        rm -rf "$TEMP_DIR"
+        exit 1
+      }
+      print_status "$ICON_SUCCESS" "$COLOR_GREEN" "Directory archived successfully"
+      UPLOAD_FILE="$archive_name"
+    else
+      print_status "$ICON_ERROR" "$COLOR_RED" "zip is required for directory upload"
+      rm -rf "$TEMP_DIR"
+      exit 1
+    fi
+  fi
   
   # If password protection is requested
   if [[ -n "$password" ]]; then
