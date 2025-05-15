@@ -59,27 +59,36 @@ brew install curl qrencode zip p7zip pbcopy
 ## 📦 Usage
 
 ```bash
-buzzlink [OPTIONS] <file>
+buzzlink [OPTIONS] <file | directory>
 ```
 
 ### Options
 
-| Flag | Description                           |
-| ---- | ------------------------------------- |
-| `-h` | Show help message                     |
-| `-n` | Add a base64-encoded note to the file |
-| `-p` | Password-protect the file (7z/zip)    |
+| Flag      | Description                           |
+| --------- | --------------------------------------|
+| `-h`      | Show help message                     |
+| `-n NOTE` | Add a base64-encoded note to the file |
+| `-p PASS` | Password-protect the file (7z/zip)    |
 
 ### Examples
+
+## Basic File Upload
 
 ```bash
 buzzlink image.jpg
 ```
 
+## Upload a Directory
+```bash
+buzzlink folder/
+```
+
+## Upload with a note
 ```bash
 buzzlink -n "Company invoice" invoice.pdf
 ```
 
+## Encrypted upload
 ```bash
 buzzlink -p "topsecret" design.sketch
 ```
