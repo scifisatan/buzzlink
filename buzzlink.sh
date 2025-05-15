@@ -66,7 +66,6 @@ Examples:
 Requirements:
   • curl        - For file upload
   • xclip/wl-copy/pbcopy - For clipboard operations
-  • qrencode    - For QR code generation
   • 7z/zip      - For password protection
 
 Report issues: github.com/yourusername/buzzlink
@@ -89,7 +88,6 @@ check_dependencies() {
   
   # Check for required tools
   command -v curl >/dev/null 2>&1 || missing+=("curl")
-  command -v qrencode >/dev/null 2>&1 || missing+=("qrencode")
   
   # Check for at least one clipboard tool
   if ! command -v xclip >/dev/null 2>&1 && ! command -v wl-copy >/dev/null 2>&1 && ! command -v pbcopy >/dev/null 2>&1; then
@@ -263,16 +261,33 @@ process_file() {
   [[ -n "$NOTE" ]] && UPLOAD_URL="${UPLOAD_URL}?note=$NOTE"
 }
 
-# Generate QR code for the download link
+# Generate QR code for the download link using online API
 generate_qr() {
   local link="$1"
   print_status "$ICON_MOBILE" "$COLOR_MAGENTA" "QR Code for mobile access:"
-  if command -v qrencode >/dev/null 2>&1; then
-    # Using -s 1 for smaller size and -m 1 for smaller margin
-    qrencode -s 1 -m 1 -t UTF8 "$link" 2>/dev/null
-  else
-    print_status "$ICON_WARNING" "$COLOR_YELLOW" "QR code generation requires qrencode package"
+  echo
+  
+  # Use curl to generate QR code from online API
+  # Using QR Server API (can be substituted with other online QR services)
+  local qr_api_url="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${link}"
+  
+  # Download and display the QR code as ASCII art
+  if ! curl -s "$qr_api_url" -o /tmp/qrcode.png; then
+    print_status "$ICON_ERROR" "$COLOR_RED" "Failed to generate QR code from online service"
+    return 1
   fi
+  
+  # Try to display the QR code using ASCII representation
+  if command -v jp2a >/dev/null 2>&1; then
+    jp2a --width=40 /tmp/qrcode.png
+  else
+    print_status "$ICON_INFO" "$COLOR_BLUE" "QR code generated at: $qr_api_url"
+    print_status "$ICON_INFO" "$COLOR_BLUE" "(Install jp2a to display QR codes in terminal)"
+  fi
+  
+  # Clean up temporary file
+  rm -f /tmp/qrcode.png
+  echo
 }
 
 # Copy link to clipboard
