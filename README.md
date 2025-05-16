@@ -59,6 +59,34 @@ brew install curl zip p7zip pbcopy
 
 ---
 
+## 🔄 Upgrade & Uninstall
+
+### 🔼 Upgrade
+
+To upgrade BuzzLink to the latest version:
+
+```bash
+curl -Lo buzzlink https://raw.githubusercontent.com/scifisatan/buzzlink/main/buzzlink.sh
+chmod +x buzzlink
+sudo mv buzzlink /usr/local/bin
+```
+
+This will overwrite the previous version with the latest one.
+
+---
+
+### 🗑 Uninstall
+
+To remove BuzzLink from your system:
+
+```bash
+sudo rm /usr/local/bin/buzzlink
+```
+
+You can also delete any temporary files or cache directories it might have created (if any), though by default BuzzLink doesn't persist data outside `/tmp`.
+
+---
+
 ## 📦 Usage
 
 ```bash
