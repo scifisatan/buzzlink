@@ -63,9 +63,10 @@ brew install curl zip p7zip pbcopy
 
 ### 🔼 Upgrade
 
-To upgrade BuzzLink to the latest version:
+To upgrade BuzzLink to the latest version, you can use the built-in update command:
 
 ```bash
+buzzlink -u
 curl -Lo buzzlink https://raw.githubusercontent.com/scifisatan/buzzlink/main/buzzlink.sh
 chmod +x buzzlink
 sudo mv buzzlink /usr/local/bin
