@@ -56,7 +56,7 @@ Options:
   -u        Upgrade to the latest version from GitHub
   -n NOTE   Add a note to the upload (optional)
   -p PASS   Password protect the upload before upload (optional)
-  --noqr    Disable QR code display
+  --noqr    Disable QR code display (optional)
 EOF
   exit 0
 }
@@ -79,7 +79,7 @@ Options:
   -u        Upgrade to the latest version from GitHub
   -n NOTE   Add a note to the upload (optional)
   -p PASS   Password protect the upload before upload (optional)
-  --noqr    Disable QR code display
+  --noqr    Disable QR code display (optional)
 EOF
   exit 0
 }
