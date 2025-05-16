@@ -428,9 +428,9 @@ parse_args "$@"
 # Process the file
 process_file "$FILE" "$PASSWORD"
 
-# Upload file and capture response with headers and verbose output
+# Upload file and capture response with progress bar
 print_status "$ICON_UPLOAD" "$COLOR_BLUE" "Uploading $FILENAME..."
-RESPONSE=$(curl -#o - -v -T "$UPLOAD_FILE" "$UPLOAD_URL" 2>&1)
+RESPONSE=$(curl -# --write-out "\n%{json}" -T "$UPLOAD_FILE" "$UPLOAD_URL")
 
 # Extract JSON body (strip headers)
 JSON_BODY=$(echo "$RESPONSE" | sed -n '/^{/,$p')
