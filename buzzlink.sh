@@ -3,11 +3,11 @@
 #
 #  ██████╗ ██╗   ██╗███████╗███████╗██╗     ██╗███╗   ██╗██╗  ██╗
 #  ██╔══██╗██║   ██║╚══███╔╝╚══███╔╝██║     ██║████╗  ██║██║ ██╔╝
-#  ██████╔╝██║   ██║  ███╔╝   ███╔╝ ██║     ██║██╔██╗ ██║█████╔╝ 
-#  ██╔══██╗██║   ██║ ███╔╝   ███╔╝  ██║     ██║██║╚██╗██║██╔═██╗ 
+#  ██████╔╝██║   ██║  ███╔╝   ███╔╝ ██║     ██║██╔██╗ ██║█████╔╝
+#  ██╔══██╗██║   ██║ ███╔╝   ███╔╝  ██║     ██║██║╚██╗██║██╔═██╗
 #  ██████╔╝╚██████╔╝███████╗███████╗███████╗██║██║ ╚████║██║  ██╗
 #  ╚═════╝  ╚═════╝ ╚══════╝╚══════╝╚══════╝╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝
-#                                                                
+#
 #  📦 Simple file sharing utility
 #==============================================================================
 
@@ -15,7 +15,7 @@
 readonly COLOR_RED="\033[1;31m"
 readonly COLOR_GREEN="\033[1;32m"
 readonly COLOR_YELLOW="\033[1;33m"
-readonly COLOR_BLUE="\033[1;36m"    # Using cyan instead of blue for better visibility
+readonly COLOR_BLUE="\033[1;36m"
 readonly COLOR_MAGENTA="\033[1;35m"
 readonly COLOR_CYAN="\033[1;36m"
 readonly COLOR_RESET="\033[0m"
@@ -38,8 +38,8 @@ readonly ICON_PACKAGE="📦"
 #==============================================================================
 
 # Show help message
-show_help(){
-cat << EOF
+show_help() {
+  cat <<EOF
     ██████╗ ██╗   ██╗███████╗███████╗██╗     ██╗███╗   ██╗██╗  ██╗
     ██╔══██╗██║   ██║╚══███╔╝╚══███╔╝██║     ██║████╗  ██║██║ ██╔╝
     ██████╔╝██║   ██║  ███╔╝   ███╔╝ ██║     ██║██╔██╗ ██║█████╔╝ 
@@ -61,9 +61,8 @@ EOF
   exit 0
 }
 
-
 show_info() {
-  cat << EOF
+  cat <<EOF
     ██████╗ ██╗   ██╗███████╗███████╗██╗     ██╗███╗   ██╗██╗  ██╗
     ██╔══██╗██║   ██║╚══███╔╝╚══███╔╝██║     ██║████╗  ██║██║ ██╔╝
     ██████╔╝██║   ██║  ███╔╝   ███╔╝ ██║     ██║██╔██╗ ██║█████╔╝ 
@@ -104,58 +103,65 @@ print_status() {
   local icon="$1"
   local color="$2"
   local message="$3"
-  
+
   echo -e "${color}${icon} ${message}${COLOR_RESET}"
 }
 
 # Validate dependencies
 check_dependencies() {
-  local missing=()
-  local clipboard_found=false
   local session_type
 
   # Check for required tools
-  command -v curl >/dev/null 2>&1 || missing+=("curl")
+  command -v curl >/dev/null 2>&1 || {
+    print_status "$ICON_ERROR" "$COLOR_RED" "Missing required dependency: curl"
+    exit 1
+  }
+
   # Clipboard tool detection with priority
+  # Clipboard tool detection
   session_type="${XDG_SESSION_TYPE:-}"
-  if [[ "$session_type" == "x11" ]]; then
-    if command -v xsel >/dev/null 2>&1; then
-      clipboard_found=true
-    elif command -v xclip >/dev/null 2>&1; then
-      clipboard_found=true
-    else
+  os="$(uname)"
+
+  if [[ "$os" == "Darwin" ]]; then
+    if ! command -v pbcopy >/dev/null 2>&1; then
       print_status "$ICON_WARNING" "$COLOR_YELLOW" "Copy is not supported, required package not found."
-      echo -e "  • Please install xsel"
+      echo -e "  • Please install ${COLOR_CYAN}pbcopy${COLOR_RESET} (usually available by default on macOS)"
     fi
-  elif [[ "$session_type" == "wayland" ]]; then
-    if command -v wl-copy >/dev/null 2>&1; then
-      clipboard_found=true
+
+  elif [[ "$os" == "Linux" ]]; then
+    if [[ "$session_type" == "wayland" ]]; then
+      if ! command -v wl-copy >/dev/null 2>&1; then
+        print_status "$ICON_WARNING" "$COLOR_YELLOW" "Copy is not supported, required package not found."
+        echo -e "  • Please install ${COLOR_CYAN}wl-clipboard${COLOR_RESET} for Wayland sessions"
+      fi
+
+    elif [[ "$session_type" == "x11" ]]; then
+      if ! command -v xsel >/dev/null 2>&1 && ! command -v xclip >/dev/null 2>&1; then
+        print_status "$ICON_WARNING" "$COLOR_YELLOW" "Copy is not supported, required package not found."
+        echo -e "  • Please install ${COLOR_CYAN}xsel${COLOR_RESET} or ${COLOR_CYAN}xclip${COLOR_RESET} for X11 sessions"
+      fi
+
     else
-      print_status "$ICON_WARNING" "$COLOR_YELLOW" "Copy is not supported, required package not found."
-      echo -e "  • Please install wl-clipboard"
+      # Unknown or undefined session type – fallback check
+      if ! command -v xsel >/dev/null 2>&1 &&
+        ! command -v xclip >/dev/null 2>&1 &&
+        ! command -v wl-copy >/dev/null 2>&1 &&
+        ! command -v pbcopy >/dev/null 2>&1; then
+        print_status "$ICON_WARNING" "$COLOR_YELLOW" "Copy is not supported, required package not found."
+        echo -e "  • Please install one of the following tools based on your setup:"
+        echo -e "    ${COLOR_CYAN}xsel${COLOR_RESET}, ${COLOR_CYAN}xclip${COLOR_RESET}, ${COLOR_CYAN}wl-clipboard${COLOR_RESET}, or ${COLOR_CYAN}pbcopy${COLOR_RESET}"
+      fi
     fi
   else
-    # Unknown session type, try all
-    if command -v xsel >/dev/null 2>&1 || command -v xclip >/dev/null 2>&1 || command -v wl-copy >/dev/null 2>&1; then
-      clipboard_found=true
-    else
-      print_status "$ICON_WARNING" "$COLOR_YELLOW" "Copy is not supported, required package not found."
-      echo -e "  • Please install xsel or wl-clipboard depending on your environment."
-    fi
+    print_status "$ICON_ERROR" "$COLOR_RED" "Unsupported OS: $os"
   fi
 
   # For password protection, check for either 7z or zip (prefer 7z)
-  if ! command -v 7z >/dev/null 2>&1 && ! command -v zip >/dev/null 2>&1; then
-    print_status "$ICON_WARNING" "$COLOR_YELLOW" "Password protection or folder upload is not supported, required package not found."
-    echo -e "  • Please install 7z: p7zip-full"
-  fi
-
-  if [ ${#missing[@]} -ne 0 ]; then
-    print_status "$ICON_ERROR" "$COLOR_RED" "Missing required dependencies:"
-    for dep in "${missing[@]}"; do
-      echo -e "  • ${dep}"
-    done
-    exit 1
+  if ! command -v 7z >/dev/null 2>&1; then
+    if ! command -v zip >/dev/null 2>&1; then
+      print_status "$ICON_WARNING" "$COLOR_YELLOW" "Password protection or folder upload is not supported, required package not found."
+      echo -e "  • Please install 7z: p7zip-full"
+    fi
   fi
 }
 
@@ -168,61 +174,64 @@ parse_args() {
   SHOW_QR=true
 
   local args=()
-  
+
   # Separate standard arguments and --noqr flag
   while [[ $# -gt 0 ]]; do
     case "$1" in
-      --noqr)
-        SHOW_QR=false
-        ;;
-      *)
-        args+=("$1")
-        ;;
+    --noqr)
+      SHOW_QR=false
+      ;;
+    *)
+      args+=("$1")
+      ;;
     esac
     shift
   done
-  
+
   # Set the positional arguments to our filtered args
   set -- "${args[@]}"
-  
+
   # Check if any arguments were provided
-  [[ $# -eq 0 ]] && {  show_help; }
-  
+  [[ $# -eq 0 ]] && { show_help; }
+
   # Parse options using getopts
   while getopts ":hn:p:ui" opt; do
     case ${opt} in
-      h)
-        show_help
-        ;;
-      n)
-        NOTE=$(echo -n "$OPTARG" | base64)
-        ;;
-      p)
-        PASSWORD="$OPTARG"
-        ;;
-      u)
-        upgrade_script
-        ;;
-      i)
-        show_info
-        ;;
-      \?)
-        print_status "$ICON_ERROR" "$COLOR_RED" "Invalid option: -$OPTARG"
-        show_help
-        ;;
-      :)
-        print_status "$ICON_ERROR" "$COLOR_RED" "Option -$OPTARG requires an argument."
-        show_help
-        ;;
+    h)
+      show_help
+      ;;
+    n)
+      NOTE=$(echo -n "$OPTARG" | base64)
+      ;;
+    p)
+      PASSWORD="$OPTARG"
+      ;;
+    u)
+      upgrade_script
+      ;;
+    i)
+      show_info
+      ;;
+    \?)
+      print_status "$ICON_ERROR" "$COLOR_RED" "Invalid option: -$OPTARG"
+      show_help
+      ;;
+    :)
+      print_status "$ICON_ERROR" "$COLOR_RED" "Option -$OPTARG requires an argument."
+      show_help
+      ;;
     esac
   done
 
   # Get the file from remaining arguments
   shift $((OPTIND - 1))
-  
+
   # Check if a file was specified
-  [[ $# -eq 0 ]] && { print_status "$ICON_ERROR" "$COLOR_RED" "No file specified."; show_help; }
-  
+  [[ $# -eq 0 ]] && {
+    print_status "$ICON_ERROR" "$COLOR_RED" "No file specified."
+    show_help
+  }
+
   # Set and verify path exists
   FILE="$1"
   if [[ ! -e "$FILE" ]]; then
@@ -237,18 +246,18 @@ process_file() {
   local password="$2"
   local temp_dir
   local archive_name
-  
+
   # Initialize variables
   UPLOAD_FILE="$input_path"
-  
+
   # If it's a directory, create zip archive
   if [[ -d "$input_path" ]]; then
     # Create temporary directory
     TEMP_DIR=$(mktemp -d)
     archive_name="${TEMP_DIR}/$(basename "$input_path").zip"
-    
+
     print_status "$ICON_PACKAGE" "$COLOR_BLUE" "Creating archive from directory..."
-    
+
     # Try to create zip archive
     if command -v zip >/dev/null 2>&1; then
       (cd "$(dirname "$input_path")" && zip -r "$archive_name" "$(basename "$input_path")") >/dev/null 2>&1 || {
@@ -264,15 +273,15 @@ process_file() {
       exit 1
     fi
   fi
-  
+
   # If password protection is requested
   if [[ -n "$password" ]]; then
     # Create temporary directory
     TEMP_DIR=$(mktemp -d)
     archive_name="${TEMP_DIR}/$(basename "$input_file").zip"
-    
+
     print_status "$ICON_LOCK" "$COLOR_BLUE" "Creating encrypted archive..."
-    
+
     # Try 7z first, fall back to zip
     if command -v 7z >/dev/null 2>&1; then
       7z a -p"$password" -mhe=on "$archive_name" "$input_file" >/dev/null 2>&1
@@ -311,7 +320,7 @@ process_file() {
       fi
     fi
   fi
-  
+
   # Set filename and URL
   FILENAME=$(basename "$UPLOAD_FILE")
   UPLOAD_URL="https://w.buzzheavier.com/$FILENAME"
@@ -325,9 +334,9 @@ generate_qr() {
 
   # Use qrcode.show API with fixed dimensions
   if ! curl -s -d "$link" https://qrcode.show \
-      -H "Accept: text/plain" \
-      -H "X-QR-Width: 5" \
-      -H "X-QR-Height: 5"; then
+    -H "Accept: text/plain" \
+    -H "X-QR-Width: 5" \
+    -H "X-QR-Height: 5"; then
     print_status "$ICON_ERROR" "$COLOR_RED" "Failed to generate QR code from online service"
     return 1
   fi
@@ -377,7 +386,6 @@ upgrade_script() {
   fi
 }
 
-
 # Clean up temporary files
 cleanup() {
   [[ -n "$TEMP_DIR" ]] && rm -rf "$TEMP_DIR"
@@ -410,11 +418,9 @@ if ! echo "$JSON_BODY" | grep -q '{'; then
   exit 1
 fi
 
-
 # Use grep/cut to extract id from json
 CODE=$(echo "$JSON_BODY" | grep -o '"code":[0-9]*' | cut -d':' -f2)
 ID=$(echo "$JSON_BODY" | grep -o '"id":"[^"]*' | cut -d'"' -f4)
-
 
 # Verify response code and ID
 if [[ "$CODE" != "201" ]]; then
@@ -446,4 +452,3 @@ copy_to_clipboard "$LINK"
 
 # If file was password protected
 [[ -n "$PASSWORD" ]] && print_status "$ICON_KEY" "$COLOR_YELLOW" "Password: $PASSWORD (keep this safe!)"
-
