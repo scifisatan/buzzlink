@@ -53,8 +53,8 @@ Usage:
 Options:
   -h        Show this help message
   -i        Show more info
-  -n NOTE   Add a note to the upload (optional)
   -u        Upgrade to the latest version from GitHub
+  -n NOTE   Add a note to the upload (optional)
   -p PASS   Password protect the upload before upload (optional)
   --noqr    Disable QR code display
 EOF
