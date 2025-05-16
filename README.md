@@ -69,9 +69,6 @@ To upgrade BuzzLink to the latest version, you can use the built-in update comma
 
 ```bash
 buzzlink -u
-curl -Lo buzzlink https://raw.githubusercontent.com/scifisatan/buzzlink/main/buzzlink.sh
-chmod +x buzzlink
-sudo mv buzzlink /usr/local/bin
 ```
 
 This will overwrite the previous version with the latest one.

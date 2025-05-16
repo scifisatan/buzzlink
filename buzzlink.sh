@@ -80,6 +80,29 @@ Options:
   -n NOTE   Add a note to the upload (optional)
   -p PASS   Password protect the upload before upload (optional)
   --noqr    Disable QR code display
+EOF
+  exit 0
+}
+
+show_info() {
+  cat <<EOF
+    ██████╗ ██╗   ██╗███████╗███████╗██╗     ██╗███╗   ██╗██╗  ██╗
+    ██╔══██╗██║   ██║╚══███╔╝╚══███╔╝██║     ██║████╗  ██║██║ ██╔╝
+    ██████╔╝██║   ██║  ███╔╝   ███╔╝ ██║     ██║██╔██╗ ██║█████╔╝ 
+    ██╔══██╗██║   ██║ ███╔╝   ███╔╝  ██║     ██║██║╚██╗██║██╔═██╗ 
+    ██████╔╝╚██████╔╝███████╗███████╗███████╗██║██║ ╚████║██║  ██╗
+    ╚═════╝  ╚═════╝ ╚══════╝╚══════╝╚══════╝╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝
+
+Usage: 
+  $(basename "$0") [OPTIONS] <file|directory>
+
+Options:
+  -h        Show short helpful message
+  -i        Show this info message
+  -u        Upgrade to the latest version from GitHub
+  -n NOTE   Add a note to the upload (optional)
+  -p PASS   Password protect the upload before upload (optional)
+  --noqr    Disable QR code display
 
 Examples:
   $(basename "$0") image.jpg                    # Upload a file
