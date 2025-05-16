@@ -98,37 +98,45 @@ buzzlink [OPTIONS] <file | directory>
 
 ### Options
 
-| Flag      | Description                           |
-| --------- | ------------------------------------- |
-| `-h`      | Show help message                     |
-| `-n NOTE` | Add a base64-encoded note to the file |
-| `-p PASS` | Password-protect the file (7z/zip)    |
-| `--noqr`  | Disable QR code display.              |
+| Flag      | Description                                     |
+| --------- | ----------------------------------------------- |
+| `-h`      | Show help message                               |
+| `-i`      | Show detailed info and usage examples           |
+| `-u`      | Upgrade to the latest version from GitHub       |
+| `-n NOTE` | Add a note to the upload (base64-encoded)       |
+| `-p PASS` | Password-protect the file or directory (7z/zip) |
+| `--noqr`  | Disable QR code display                         |
 
 ### Examples
 
-## Basic File Upload
+#### Basic File Upload
 
 ```bash
 buzzlink image.jpg
 ```
 
-## Upload a Directory
+#### Upload a Directory
 
 ```bash
 buzzlink folder/
 ```
 
-## Upload with a note
+#### Upload with a note
 
 ```bash
 buzzlink -n "Company invoice" invoice.pdf
 ```
 
-## Encrypted upload
+#### Encrypted upload
 
 ```bash
 buzzlink -p "topsecret" design.sketch
+```
+
+#### Upload without QR code
+
+```bash
+buzzlink --noqr file.txt
 ```
 
 ## 🔐 Security
