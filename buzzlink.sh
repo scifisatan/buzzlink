@@ -15,7 +15,7 @@
 readonly COLOR_RED="\033[1;31m"
 readonly COLOR_GREEN="\033[1;32m"
 readonly COLOR_YELLOW="\033[1;33m"
-readonly COLOR_BLUE="\033[1;36m"
+readonly COLOR_BLUE="\033[1;36m" # Using cyan instead of blue for better visibility
 readonly COLOR_MAGENTA="\033[1;35m"
 readonly COLOR_CYAN="\033[1;36m"
 readonly COLOR_RESET="\033[0m"
