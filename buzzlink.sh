@@ -53,6 +53,7 @@ Usage:
 Options:
   -h        Show this help message
   -n NOTE   Add a note to the upload (optional)
+  -u        Upgrade to the latest version from GitHub
   -p PASS   Password protect the upload before upload (optional)
   --noqr    Disable QR code display
 
@@ -138,7 +139,7 @@ parse_args() {
   [[ $# -eq 0 ]] && { print_status "$ICON_ERROR" "$COLOR_RED" "No file specified."; show_help; }
   
   # Parse options using getopts
-  while getopts ":hn:p:" opt; do
+  while getopts ":hn:p:u" opt; do
     case ${opt} in
       h)
         show_help
@@ -149,6 +150,9 @@ parse_args() {
       p)
         PASSWORD="$OPTARG"
         ;;
+      u)
+       upgrade_script
+      ;; 
       \?)
         print_status "$ICON_ERROR" "$COLOR_RED" "Invalid option: -$OPTARG"
         show_help
@@ -265,18 +269,18 @@ generate_qr() {
   local link="$1"
   print_status "$ICON_MOBILE" "$COLOR_MAGENTA" "QR Code for mobile access:"
   echo
-  
-  # Use qrcode.show API directly with POST method as documented
-  # Accept: text/plain header for ASCII art output
-  if ! curl -s -d "$link" https://qrcode.show -H "Accept: text/plain"; then
+
+  # Use qrcode.show API with fixed dimensions
+  if ! curl -s -d "$link" https://qrcode.show \
+      -H "Accept: text/plain" \
+      -H "X-QR-Width: 5" \
+      -H "X-QR-Height: 5"; then
     print_status "$ICON_ERROR" "$COLOR_RED" "Failed to generate QR code from online service"
     return 1
   fi
-  
+
   echo
 }
-
-
 
 # Copy link to clipboard
 copy_to_clipboard() {
@@ -295,6 +299,31 @@ copy_to_clipboard() {
     return 1
   fi
 }
+
+upgrade_script() {
+  local script_url="https://raw.githubusercontent.com/scifisatan/buzzlink/main/buzzlink.sh"
+  local current_script
+  current_script=$(which buzzlink)
+
+  if [[ -z "$current_script" || ! -w "$current_script" ]]; then
+    print_status "$ICON_ERROR" "$COLOR_RED" "Cannot determine or write to the current script path ($current_script). Try running with sudo."
+    exit 1
+  fi
+
+  print_status "$ICON_INFO" "$COLOR_BLUE" "Checking for updates at $script_url..."
+
+  if curl -fsSL "$script_url" -o "${current_script}.new"; then
+    chmod +x "${current_script}.new"
+    mv "${current_script}.new" "$current_script"
+    print_status "$ICON_SUCCESS" "$COLOR_GREEN" "Script updated successfully at $current_script!"
+    exit 0
+  else
+    print_status "$ICON_ERROR" "$COLOR_RED" "Failed to download the latest version."
+    rm -f "${current_script}.new"
+    exit 1
+  fi
+}
+
 
 # Clean up temporary files
 cleanup() {
