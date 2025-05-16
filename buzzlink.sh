@@ -38,8 +38,8 @@ readonly ICON_PACKAGE="📦"
 #==============================================================================
 
 # Show help message
-show_help() {
-  cat << EOF
+show_help(){
+cat << EOF
     ██████╗ ██╗   ██╗███████╗███████╗██╗     ██╗███╗   ██╗██╗  ██╗
     ██╔══██╗██║   ██║╚══███╔╝╚══███╔╝██║     ██║████╗  ██║██║ ██╔╝
     ██████╔╝██║   ██║  ███╔╝   ███╔╝ ██║     ██║██╔██╗ ██║█████╔╝ 
@@ -52,24 +52,49 @@ Usage:
 
 Options:
   -h        Show this help message
+  -i        Show more info
   -n NOTE   Add a note to the upload (optional)
   -u        Upgrade to the latest version from GitHub
+  -p PASS   Password protect the upload before upload (optional)
+  --noqr    Disable QR code display
+EOF
+  exit 0
+}
+
+
+show_info() {
+  cat << EOF
+    ██████╗ ██╗   ██╗███████╗███████╗██╗     ██╗███╗   ██╗██╗  ██╗
+    ██╔══██╗██║   ██║╚══███╔╝╚══███╔╝██║     ██║████╗  ██║██║ ██╔╝
+    ██████╔╝██║   ██║  ███╔╝   ███╔╝ ██║     ██║██╔██╗ ██║█████╔╝ 
+    ██╔══██╗██║   ██║ ███╔╝   ███╔╝  ██║     ██║██║╚██╗██║██╔═██╗ 
+    ██████╔╝╚██████╔╝███████╗███████╗███████╗██║██║ ╚████║██║  ██╗
+    ╚═════╝  ╚═════╝ ╚══════╝╚══════╝╚══════╝╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝
+
+Usage: 
+  $(basename "$0") [OPTIONS] <file|directory>
+
+Options:
+  -h        Show short helpful message
+  -i        Show this info message
+  -u        Upgrade to the latest version from GitHub
+  -n NOTE   Add a note to the upload (optional)
   -p PASS   Password protect the upload before upload (optional)
   --noqr    Disable QR code display
 
 Examples:
   $(basename "$0") image.jpg                    # Upload a file
   $(basename "$0") documents/                   # Upload a directory as zip
-  $(basename "$0") -n "Project files" src/     # Upload directory with note
-  $(basename "$0") -p "secret123" docs/        # Upload encrypted directory
-  $(basename "$0") image.jpg --noqr            # Upload without QR code
+  $(basename "$0") -n "Project files" src/      # Upload directory with note
+  $(basename "$0") -p "secret123" docs/         # Upload encrypted directory
+  $(basename "$0") image.jpg --noqr             # Upload without QR code
   
 Requirements:
   • curl        - For file upload
   • xclip/wl-copy/pbcopy - For clipboard operations
   • 7z/zip      - For password protection
 
-Report issues: github.com/yourusername/buzzlink
+Report issues: github.com/scifisatan/buzzlink
 EOF
   exit 0
 }
@@ -86,20 +111,45 @@ print_status() {
 # Validate dependencies
 check_dependencies() {
   local missing=()
-  
+  local clipboard_found=false
+  local session_type
+
   # Check for required tools
   command -v curl >/dev/null 2>&1 || missing+=("curl")
-  
-  # Check for at least one clipboard tool
-  if ! command -v xclip >/dev/null 2>&1 && ! command -v wl-copy >/dev/null 2>&1 && ! command -v pbcopy >/dev/null 2>&1; then
-    missing+=("xclip/wl-copy/pbcopy")
+  # Clipboard tool detection with priority
+  session_type="${XDG_SESSION_TYPE:-}"
+  if [[ "$session_type" == "x11" ]]; then
+    if command -v xsel >/dev/null 2>&1; then
+      clipboard_found=true
+    elif command -v xclip >/dev/null 2>&1; then
+      clipboard_found=true
+    else
+      print_status "$ICON_WARNING" "$COLOR_YELLOW" "Copy is not supported, required package not found."
+      echo -e "  • Please install xsel"
+    fi
+  elif [[ "$session_type" == "wayland" ]]; then
+    if command -v wl-copy >/dev/null 2>&1; then
+      clipboard_found=true
+    else
+      print_status "$ICON_WARNING" "$COLOR_YELLOW" "Copy is not supported, required package not found."
+      echo -e "  • Please install wl-clipboard"
+    fi
+  else
+    # Unknown session type, try all
+    if command -v xsel >/dev/null 2>&1 || command -v xclip >/dev/null 2>&1 || command -v wl-copy >/dev/null 2>&1; then
+      clipboard_found=true
+    else
+      print_status "$ICON_WARNING" "$COLOR_YELLOW" "Copy is not supported, required package not found."
+      echo -e "  • Please install xsel or wl-clipboard depending on your environment."
+    fi
   fi
-  
-  # For password protection, check for either 7z or zip
+
+  # For password protection, check for either 7z or zip (prefer 7z)
   if ! command -v 7z >/dev/null 2>&1 && ! command -v zip >/dev/null 2>&1; then
-    missing+=("7z/zip")
+    print_status "$ICON_WARNING" "$COLOR_YELLOW" "Password protection or folder upload is not supported, required package not found."
+    echo -e "  • Please install 7z: p7zip-full"
   fi
-  
+
   if [ ${#missing[@]} -ne 0 ]; then
     print_status "$ICON_ERROR" "$COLOR_RED" "Missing required dependencies:"
     for dep in "${missing[@]}"; do
@@ -136,10 +186,10 @@ parse_args() {
   set -- "${args[@]}"
   
   # Check if any arguments were provided
-  [[ $# -eq 0 ]] && { print_status "$ICON_ERROR" "$COLOR_RED" "No file specified."; show_help; }
+  [[ $# -eq 0 ]] && {  show_help; }
   
   # Parse options using getopts
-  while getopts ":hn:p:u" opt; do
+  while getopts ":hn:p:ui" opt; do
     case ${opt} in
       h)
         show_help
@@ -151,8 +201,11 @@ parse_args() {
         PASSWORD="$OPTARG"
         ;;
       u)
-       upgrade_script
-      ;; 
+        upgrade_script
+        ;;
+      i)
+        show_info
+        ;;
       \?)
         print_status "$ICON_ERROR" "$COLOR_RED" "Invalid option: -$OPTARG"
         show_help
