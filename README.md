@@ -35,17 +35,19 @@ curl -Lo buzzlink https://raw.githubusercontent.com/scifisatan/buzzlink/main/buz
 chmod +x buzzlink
 sudo mv buzzlink /usr/local/bin
 
-````
+```
+
 > Make sure `/usr/local/bin` is in your `$PATH`.
+
 ---
 
 ## 🛠 Requirements
 
 Ensure these are installed on your system:
 
-* [`curl`](https://curl.se/)
-* One clipboard tool: `xclip`, `wl-copy`, or `pbcopy`
-* One encryption tool: `7z` or `zip`
+- [`curl`](https://curl.se/)
+- One clipboard tool: `xclip`, `wl-copy`, or `pbcopy`
+- One encryption tool: `7z` or `zip`
 
 Install with:
 
@@ -81,7 +83,7 @@ This will overwrite the previous version with the latest one.
 To remove BuzzLink from your system:
 
 ```bash
-sudo rm /usr/local/bin/buzzlink
+sudo rm $(which buzzlink)
 ```
 
 You can also delete any temporary files or cache directories it might have created (if any), though by default BuzzLink doesn't persist data outside `/tmp`.
@@ -97,7 +99,7 @@ buzzlink [OPTIONS] <file | directory>
 ### Options
 
 | Flag      | Description                           |
-| --------- | --------------------------------------|
+| --------- | ------------------------------------- |
 | `-h`      | Show help message                     |
 | `-n NOTE` | Add a base64-encoded note to the file |
 | `-p PASS` | Password-protect the file (7z/zip)    |
@@ -112,23 +114,26 @@ buzzlink image.jpg
 ```
 
 ## Upload a Directory
+
 ```bash
 buzzlink folder/
 ```
 
 ## Upload with a note
+
 ```bash
 buzzlink -n "Company invoice" invoice.pdf
 ```
 
 ## Encrypted upload
+
 ```bash
 buzzlink -p "topsecret" design.sketch
 ```
 
 ## 🔐 Security
 
-When using `-p`, your file is encrypted *locally* before upload using either `7z` or `zip` with AES encryption. BuzzLink does **not** store or log your password.
+When using `-p`, your file is encrypted _locally_ before upload using either `7z` or `zip` with AES encryption. BuzzLink does **not** store or log your password.
 
 ---
 
