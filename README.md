@@ -147,7 +147,7 @@ When using `-p`, your file is encrypted _locally_ before upload using either `7z
 BuzzLink uploads files to:
 
 ```
-https://www.buzzheavier.com/<FILENAME>
+https://w.buzzheavier.com/<FILENAME>
 ```
 
 And generates a short link like:
