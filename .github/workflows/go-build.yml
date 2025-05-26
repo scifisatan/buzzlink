@@ -1,0 +1,46 @@
+name: Build Go CLI for All Platforms
+
+on:
+  push:
+    tags:
+      - 'go-build-v*'  # Triggers when pushing version tags like go-build-v1.0.0
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        goos: [linux, windows, darwin]
+        goarch: [amd64, arm64, 386]
+        exclude:
+          # Exclude incompatible or less useful combinations
+          - goos: darwin
+            goarch: 386
+    name: Build ${{ matrix.goos }}-${{ matrix.goarch }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Build binary
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: |
+          mkdir -p dist
+          EXT=""
+          if [ "${GOOS}" = "windows" ]; then
+            EXT=".exe"
+          fi
+          OUTPUT="dist/mycli-${GOOS}-${GOARCH}${EXT}"
+          go build -o "$OUTPUT" ./...
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mycli-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: dist/mycli-${{ matrix.goos }}-${{ matrix.goarch }}*
