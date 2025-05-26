@@ -181,10 +181,6 @@ Pull requests are welcome! Feel free to [open an issue](https://github.com/youru
 
 ---
 
-## 📄 License
-
-This project is licensed under the [MIT License](LICENSE).
-
 ---
 
 ## ❤️ Acknowledgments

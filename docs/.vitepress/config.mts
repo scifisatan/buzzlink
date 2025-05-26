@@ -19,4 +19,8 @@ export default defineConfig({
       { icon: "github", link: "https://github.com/scifisatan/buzzlink" },
     ],
   },
+  lastUpdated: true,
+  markdown: {
+    lineNumbers: true,
+  },
 });
