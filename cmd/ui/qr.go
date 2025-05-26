@@ -1,4 +1,4 @@
-package cmd
+package ui
 
 import (
 	"os"
@@ -6,8 +6,9 @@ import (
 	qrterminal "github.com/mdp/qrterminal/v3"
 )
 
-// ShowQR generates and prints a QR code in ANSI for the given link
-func ShowQR(link string) error {
+// ShowQR generates and prints a QR code in ANSI for the given link.
+// It's renamed to Show for brevity within the ui package context but was ShowQR.
+func Show(link string) error { // Renamed from ShowQR, made public
 	config := qrterminal.Config{
 		Level:      qrterminal.L,
 		Writer:     os.Stdout,

@@ -1,4 +1,4 @@
-package cmd
+package ui
 
 // Color constants (ANSI escape codes)
 const (
@@ -44,12 +44,6 @@ Options:
   -p PASS   Password protect the upload before upload (optional)
   --qr      Enable QR code display
 
-Examples:
-  buzzlink image.jpg                    # Upload a file
-  buzzlink documents/                   # Upload a directory as zip
-  buzzlink -n "Project files" src/      # Upload directory with note
-  buzzlink -p "secret123" docs/         # Upload encrypted directory
-  buzzlink image.jpg --qr               # Upload and display QR code
-
+For more information, visit: https://buzzlink.netify.app
 Report issues: github.com/scifisatan/buzzlink
 `

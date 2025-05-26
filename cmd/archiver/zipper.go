@@ -1,4 +1,4 @@
-package cmd
+package archiver
 
 import (
 	"fmt"
@@ -11,8 +11,8 @@ import (
 )
 
 // ZipIfNeeded zips the file or directory if required (e.g., for password protection or directory upload)
+// Renamed from ZipIfNeeded (though name is same), made public.
 func ZipIfNeeded(filePath string, password string) (string, error) {
-	// Input validation
 	if strings.TrimSpace(filePath) == "" {
 		return "", fmt.Errorf("file path cannot be empty")
 	}
@@ -26,14 +26,11 @@ func ZipIfNeeded(filePath string, password string) (string, error) {
 	shouldZip := isDir || password != ""
 
 	if !shouldZip {
-		// No zipping needed, just return the original file
 		return filePath, nil
 	}
 
-	// Generate a better zip name
 	zipName := generateUniqueZipName(filePath)
 
-	// Check if zip file already exists
 	if _, err := os.Stat(zipName); err == nil {
 		return "", fmt.Errorf("zip file %q already exists", zipName)
 	}
@@ -43,24 +40,20 @@ func ZipIfNeeded(filePath string, password string) (string, error) {
 		return "", fmt.Errorf("could not create zip file %q: %w", zipName, err)
 	}
 
-	// Ensure proper cleanup with error handling
 	var zipWriter *yekazip.Writer
 	defer func() {
 		if zipWriter != nil {
 			if closeErr := zipWriter.Close(); closeErr != nil {
-				// If we don't already have an error, use the close error
 				if err == nil {
 					err = fmt.Errorf("failed to close zip writer: %w", closeErr)
 				}
 			}
 		}
 		if closeErr := zipFile.Close(); closeErr != nil {
-			// If we don't already have an error, use the close error
 			if err == nil {
 				err = fmt.Errorf("failed to close zip file: %w", closeErr)
 			}
 		}
-		// Clean up zip file if there was an error
 		if err != nil {
 			os.Remove(zipName)
 		}
@@ -69,18 +62,15 @@ func ZipIfNeeded(filePath string, password string) (string, error) {
 	zipWriter = yekazip.NewWriter(zipFile)
 
 	if isDir {
-		// Walk the directory and add files
 		err = filepath.Walk(filePath, func(path string, info os.FileInfo, walkErr error) error {
 			if walkErr != nil {
 				return walkErr
 			}
 
-			// Skip directories and symlinks
 			if info.IsDir() || info.Mode()&os.ModeSymlink != 0 {
 				return nil
 			}
 
-			// Calculate relative path correctly
 			relPath, relErr := filepath.Rel(filePath, path)
 			if relErr != nil {
 				return fmt.Errorf("could not calculate relative path for %q: %w", path, relErr)
@@ -101,7 +91,6 @@ func ZipIfNeeded(filePath string, password string) (string, error) {
 	return zipName, err
 }
 
-// addFileToZip adds a file to the zip writer, with optional password protection
 func addFileToZip(zipWriter *yekazip.Writer, filePath, zipPath, password string) error {
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -122,8 +111,7 @@ func addFileToZip(zipWriter *yekazip.Writer, filePath, zipPath, password string)
 		}
 	}
 
-	// Use buffered copying for better performance with large files
-	_, err = io.CopyBuffer(fw, file, make([]byte, 32*1024)) // 32KB buffer
+	_, err = io.CopyBuffer(fw, file, make([]byte, 32*1024))
 	if err != nil {
 		return fmt.Errorf("could not copy file %q to zip: %w", filePath, err)
 	}
@@ -131,28 +119,22 @@ func addFileToZip(zipWriter *yekazip.Writer, filePath, zipPath, password string)
 	return nil
 }
 
-// generateZipName creates a sensible zip file name from the input path
 func generateZipName(filePath string) string {
 	info, err := os.Stat(filePath)
 	if err == nil && info.IsDir() {
-		// If it's a directory, use the directory name
 		return filePath + ".zip"
 	}
-	// Remove any existing extension for cleaner naming
 	nameWithoutExt := strings.TrimSuffix(filePath, filepath.Ext(filePath))
 	return nameWithoutExt + ".zip"
 }
 
-// Alternative version that generates unique names if file exists
 func generateUniqueZipName(filePath string) string {
 	baseZipName := generateZipName(filePath)
 
-	// If file doesn't exist, return the base name
 	if _, err := os.Stat(baseZipName); os.IsNotExist(err) {
 		return baseZipName
 	}
 
-	// Generate unique name with counter
 	nameWithoutExt := strings.TrimSuffix(baseZipName, ".zip")
 	counter := 1
 

@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"os"
 
+	"buzzlink/cmd/archiver"
+	"buzzlink/cmd/ui"
+
 	"github.com/spf13/cobra"
 	clipboard "github.com/tiagomelo/go-clipboard/clipboard"
 )
@@ -12,71 +15,66 @@ var note string
 var password string
 var showQR bool
 
-// printStatus prints a colored, emoji-prefixed status message
-func printStatus(icon, color, message string) {
-	fmt.Printf("%s%s %s%s\n", color, icon, message, ColorReset)
-}
-
 var rootCmd = &cobra.Command{
 	Use:   "buzzlink",
 	Short: "buzzlink is a cli tool for sharing files and folders through buzzheavier's API",
-	Long:  BuzzlinkBanner,
+	Long:  ui.BuzzlinkBanner,
 	Run: func(cmd *cobra.Command, args []string) {
 		if note == "" && password == "" && !showQR && len(args) == 0 {
-			fmt.Println(BuzzlinkBanner)
+			fmt.Println(ui.BuzzlinkBanner)
 			return
 		}
 
 		if len(args) == 0 {
-			printStatus(IconError, ColorRed, "No file or directory specified.")
+			ui.PrintStatus(ui.IconError, ui.ColorRed, "No file or directory specified.")
 			os.Exit(1)
 		}
 
 		filePath := args[0]
-
-		// Step 1: Zip if needed
-		zippedPath, err := ZipIfNeeded(filePath, password)
+		link, err := handleFileUpload(filePath, note, password)
 		if err != nil {
-			printStatus(IconError, ColorRed, fmt.Sprintf("Error zipping file: %v", err))
+			ui.PrintStatus(ui.IconError, ui.ColorRed, fmt.Sprintf("Error: %v", err))
 			os.Exit(1)
 		}
 
-		// Step 2: Upload with spinner
-		link, err := runUploadWithSpinner(zippedPath, note)
-		if err != nil {
-			printStatus(IconError, ColorRed, fmt.Sprintf("Error uploading file: %v", err))
-			if zippedPath != filePath {
-				os.Remove(zippedPath)
-			}
-			os.Exit(1)
-		}
-
-		// Step 3: Show QR if requested
 		if showQR {
-			printStatus(IconMobile, ColorMagenta, "QR Code for mobile access:")
-			ShowQR(link)
+			ui.PrintStatus(ui.IconMobile, ui.ColorMagenta, "QR Code for mobile access:")
+			ui.Show(link)
 		}
 
-		// Step 4: Print download link and copy to clipboard (after QR)
-		// printStatus(IconSuccess, ColorGreen, "Uploaded successfully!")
-		printStatus(IconLink, ColorCyan, link)
+		ui.PrintStatus(ui.IconLink, ui.ColorCyan, link)
 		c := clipboard.New()
 		if err := c.CopyText(link); err == nil {
-			printStatus(IconClipboard, ColorCyan, "Copied to clipboard!")
+			ui.PrintStatus(ui.IconClipboard, ui.ColorMagenta, "Copied to clipboard!")
 		} else {
-			printStatus(IconWarning, ColorYellow, "Clipboard unavailable")
+			ui.PrintStatus(ui.IconWarning, ui.ColorYellow, "Clipboard unavailable")
 		}
 
-		// Step 5: Show password if set
 		if password != "" {
-			printStatus(IconKey, ColorYellow, fmt.Sprintf("Password: %s (keep this safe!)", password))
+			ui.PrintStatus(ui.IconKey, ui.ColorYellow, fmt.Sprintf("Password: %s (keep this safe!)", password))
 		}
+	},
+}
 
-		// Step 6: Cleanup zip if generated
+func handleFileUpload(filePath, note, password string) (string, error) {
+	zippedPath, err := archiver.ZipIfNeeded(filePath, password)
+	if err != nil {
+		return "", fmt.Errorf("zipping file: %w", err)
+	}
+
+	link, err := ui.RunUploadWithSpinner(zippedPath, note)
+	if err != nil {
 		if zippedPath != filePath {
 			os.Remove(zippedPath)
 		}
-	},
+		return "", fmt.Errorf("uploading file: %w", err)
+	}
+
+	if zippedPath != filePath {
+		os.Remove(zippedPath)
+	}
+
+	return link, nil
 }
 
 func init() {
@@ -87,7 +85,7 @@ func init() {
 
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Fprintf(os.Stderr, "Oops, An error occured while executing Buzzlink, '%s' \n", err)
+		ui.PrintStatus(ui.IconError, ui.ColorRed, fmt.Sprintf("Oops, An error occurred while executing Buzzlink, '%s'", err))
 		os.Exit(1)
 	}
 }

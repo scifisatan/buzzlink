@@ -1,4 +1,4 @@
-package cmd
+package network
 
 import (
 	"fmt"
@@ -8,8 +8,10 @@ import (
 	"time"
 )
 
-// MakeBrowserLikeRequest performs a GET request to the given URL with browser-like headers and returns the redirect download link from response headers.
-func MakeBrowserLikeRequest(downloadPageLink string) (string, error) {
+// GetRedirectLink performs a GET request to the given URL with browser-like headers
+// and returns the redirect download link from response headers.
+// Renamed from MakeBrowserLikeRequest, made public.
+func GetRedirectLink(downloadPageLink string) (string, error) {
 	client := &http.Client{
 		Timeout: 30 * time.Second,
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
@@ -17,9 +19,7 @@ func MakeBrowserLikeRequest(downloadPageLink string) (string, error) {
 		},
 	}
 
-	// Extract ID from downloadPageLink for headers
 	id := ""
-	// Example: https://buzzheavier.com/<id>/download
 	if u, err := url.Parse(downloadPageLink); err == nil {
 		parts := strings.Split(u.Path, "/")
 		if len(parts) > 2 {
@@ -55,7 +55,6 @@ func MakeBrowserLikeRequest(downloadPageLink string) (string, error) {
 	}
 	defer resp.Body.Close()
 
-	// Try different possible redirect headers
 	downloadLink := resp.Header.Get("Hx-Redirect")
 	if downloadLink == "" {
 		downloadLink = resp.Header.Get("HX-Redirect")
