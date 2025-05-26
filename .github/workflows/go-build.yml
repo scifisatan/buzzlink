@@ -3,7 +3,7 @@ name: Build Go CLI for All Platforms
 on:
   push:
     tags:
-      - 'go-build-v*'  # Triggers when pushing version tags like go-build-v1.0.0
+      - 'go-build-v*'
 
 jobs:
   build:
@@ -13,7 +13,6 @@ jobs:
         goos: [linux, windows, darwin]
         goarch: [amd64, arm64, 386]
         exclude:
-          # Exclude incompatible or less useful combinations
           - goos: darwin
             goarch: 386
     name: Build ${{ matrix.goos }}-${{ matrix.goarch }}
@@ -36,11 +35,11 @@ jobs:
           if [ "${GOOS}" = "windows" ]; then
             EXT=".exe"
           fi
-          OUTPUT="dist/mycli-${GOOS}-${GOARCH}${EXT}"
-          go build -o "$OUTPUT" ./...
+          OUTPUT="dist/buzzlink-${GOOS}-${GOARCH}${EXT}"
+          go build -o "$OUTPUT" .
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: mycli-${{ matrix.goos }}-${{ matrix.goarch }}
-          path: dist/mycli-${{ matrix.goos }}-${{ matrix.goarch }}*
+          name: buzzlink-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: dist/buzzlink-${{ matrix.goos }}-${{ matrix.goarch }}*
