@@ -76,6 +76,13 @@ func UploadFile(filePath, note string) (string, error) {
 		return "", fmt.Errorf("no ID in response")
 	}
 
-	downloadLink := "https://buzzheavier.com/" + respBody.Data.ID
+	downloadPageLink := "https://buzzheavier.com/" + respBody.Data.ID + "/download"
+
+	// Make a GET request to the download page to get the hx-redirect header
+	downloadLink, err := MakeBrowserLikeRequest(downloadPageLink)
+	if err != nil {
+		return "", err
+	}
+
 	return downloadLink, nil
 }
