@@ -59,7 +59,7 @@ jobs:
           - name: Gather release assets
             run: |
                 mkdir release
-                find artifacts -name '*.zip' -exec cp {} release/ \;
+                find artifacts -type f -exec cp {} release/ \;
 
           - name: Create GitHub Release
             uses: softprops/action-gh-release@v2
